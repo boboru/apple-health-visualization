@@ -4,10 +4,15 @@ from pathlib import Path
 
 import streamlit as st
 
-parser = argparse.ArgumentParser(description='Visualizes your Apple Health data')
+parser = argparse.ArgumentParser(description="Visualizes your Apple Health data")
 
-parser.add_argument('-f', '--file', default='export.feather', type=str,
-                    help='path of exported feather file')
+parser.add_argument(
+    "-f",
+    "--file",
+    default="export.feather",
+    type=str,
+    help="path of exported feather file",
+)
 
 try:
     args = parser.parse_args()
@@ -19,9 +24,7 @@ except SystemExit as e:
 
 xml_path = Path(args.file)
 if not xml_path.exists():
-    raise FileNotFoundError(
-        'XML file not found'
-    )
+    raise FileNotFoundError("XML file not found")
 else:  # save to session
     st.session_state.data_path = xml_path
 
@@ -51,5 +54,3 @@ st.markdown(
     - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
 """
 )
-
-st.write(args.file)
