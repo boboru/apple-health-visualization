@@ -11,6 +11,9 @@ import altair as alt
 def get_df():
     return pd.read_feather(st.session_state.data_path)
 
+def timedelta_to_hourminute(dt):
+    return f'{dt // 3600:.0f}h {(dt//60) % 60:.0f}m'
+
 
 st.set_page_config(
     page_title="Sleep Analysis",
@@ -71,4 +74,15 @@ c = (
 )
 
 st.markdown("###")
+
 st.altair_chart(c, use_container_width=True)
+
+# Add metrics
+col1, col2, col3 = st.columns(3)
+q1 = np.quantile(area_df["duration"], 0.25)
+q2 = np.quantile(area_df["duration"], 0.5)
+q3 = np.quantile(area_df["duration"], 0.75)
+
+col1.metric(label="Median", value=timedelta_to_hourminute(q2), help='50% percentile') 
+col2.metric(label="Q1", value=timedelta_to_hourminute(q1), help='25% percentile')
+col3.metric(label="Q3", value=timedelta_to_hourminute(q3), help='75% percentile')
