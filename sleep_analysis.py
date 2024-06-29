@@ -1,4 +1,4 @@
-from datetime import timedelta, date, time, datetime
+from datetime import timedelta, time, datetime
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -17,7 +17,7 @@ st.set_page_config(
     page_icon=":apple:",
 )
 
-st.markdown("# Sleep Analysis")
+st.markdown("# Overall Sleep")
 st.write("""Choose start date and end date to analyze your daily sleep time.""")
 
 # get data and limited its range
@@ -26,7 +26,7 @@ df = df.loc[df["value"] == "HKCategoryValueSleepAnalysisInBed"]
 date_col = ["startDate", "endDate"]
 df[date_col] = (
     df[date_col]
-    .apply(lambda x: x.dt.strftime("%Y-%m-%dT%H:%M:%S"))
+    .apply(lambda x: x.dt.strftime("%Y-%m-%d %H:%M:%S"))
     .apply(pd.to_datetime)
 )
 df["duration"] = df["endDate"] - df["startDate"]
@@ -119,7 +119,7 @@ hist_line = hist_base.mark_bar(opacity=0.4, binSpacing=0).encode(
     alt.Y("count()", stack=None),
 )
 
-hist_rule = hist_base.mark_rule(size=2, color="black").encode(
+hist_rule = hist_base.mark_rule(size=2).encode(
     alt.X("median(Time):T").axis(format="%H:%M"),
 )
 
