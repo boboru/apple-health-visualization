@@ -13,7 +13,7 @@ def timedelta_to_hourminute(dt):
     return f"{dt // 3600:.0f}h {(dt//60) % 60:.0f}m"
 
 st.set_page_config(
-    page_title="Sleep Analysis",
+    page_title="Overall Sleep",
     page_icon=":apple:",
 )
 
