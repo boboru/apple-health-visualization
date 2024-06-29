@@ -57,10 +57,10 @@ area_base = alt.Chart(area_df)
 area_line = (
     area_base.mark_area()
     .encode(
-        x=alt.X("idx").title("date"),
+        x=alt.X("idx").title("Date"),
         y=alt.Y("duration").axis(
             labelExpr='floor(datum.value/3600)+"h "+floor((datum.value%3600)/60)+"m"'
-        ),
+        ).title("Duration"),
     )
     .interactive()
 )
@@ -121,6 +121,9 @@ hist_line = hist_base.mark_bar(opacity=0.4, binSpacing=0).encode(
 
 hist_rule = hist_base.mark_rule(size=2).encode(
     alt.X("median(Time):T").axis(format="%H:%M"),
+    tooltip=[
+        alt.Tooltip("median(Time):T", format="%H:%M"),
+    ],
 )
 
 st.altair_chart((hist_line + hist_rule).interactive(), use_container_width=True)
