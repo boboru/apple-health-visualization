@@ -2,12 +2,49 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 from datetime import timedelta
+import os
 
 
 @st.cache_data
 def get_df():
-    # return pd.read_csv("temp.csv")
-    return pd.read_feather(st.session_state.data_path).drop_duplicates()
+    path = st.session_state.data_path
+    filename, file_extension = os.path.splitext(path)
+    if file_extension == ".feather":
+        df = pd.read_feather(path)
+    elif file_extension == ".csv":
+        df = pd.read_csv(
+            path, parse_dates=["startDate", "endDate"]
+        )
+    else:
+        raise IOError(
+            "Unsupported file types. Currently supports .csv or .feather file."
+        )
+
+    df.drop_duplicates(inplace=True)
+
+    df = df.loc[
+        (df["type"] == "HKCategoryTypeIdentifierSleepAnalysis")
+        | (df["type"] == "HKQuantityTypeIdentifierHeartRate")
+    ]
+
+    date_col = ["startDate", "endDate"]
+    st.write(df["startDate"].iloc[0])
+    # apple health export useless time timezone offset (+/- hours:minutes) in export.xml
+    df[date_col] = df[date_col].apply(
+        lambda x: pd.to_datetime(
+            x.dt.strftime(date_format="%Y-%m-%d %H:%M:%S"), format="%Y-%m-%d %H:%M:%S"
+        ),
+        axis=1,
+    )
+    st.write(df["startDate"].iloc[0])
+
+    # add time index
+    # D0 sleep: D0 18:00 - D1 18:00
+    df["idx"] = df["startDate"].apply(
+        lambda x: x.date() if x.hour >= 18 else x.date() - timedelta(days=1)
+    )
+
+    return df
 
 
 st.set_page_config(
@@ -19,27 +56,6 @@ st.markdown("# One Night Sleep")
 st.write("""Choose one date to investigate your sleep.""")
 
 df = get_df()
-df = df.loc[
-    (df["type"] == "HKCategoryTypeIdentifierSleepAnalysis")
-    | (df["type"] == "HKQuantityTypeIdentifierHeartRate")
-]
-# add time index
-date_col = ["startDate", "endDate"]
-df[date_col] = (
-    df[date_col]
-    .apply(lambda x: x.dt.strftime("%Y-%m-%d %H:%M:%S"))
-    .apply(pd.to_datetime)
-)
-
-# temp to combine
-temp_df = pd.read_csv("temp.csv", infer_datetime_format=True)
-temp_df[date_col] = temp_df[date_col].apply(pd.to_datetime)
-df = pd.concat([df, temp_df])
-
-# D0 sleep: D0 18:00 - D1 18:00
-df["idx"] = df["startDate"].apply(
-    lambda x: x.date() if x.hour >= 18 else x.date() - timedelta(days=1)
-)
 date_ = st.date_input(
     "Date",
     value=df["idx"].max(),
@@ -99,8 +115,8 @@ st.caption("Different sleep stages are recorded by your Apple Watch :watch:.")
 st.markdown("### ")
 st.subheader("Heart Rate")
 
-heart_df = df[df["type"] == "HKQuantityTypeIdentifierHeartRate"]
-heart_df["value"] = heart_df["value"].astype("int")
+heart_df = df.loc[df["type"] == "HKQuantityTypeIdentifierHeartRate"]
+heart_df.loc[:, "value"] = heart_df["value"].astype("int64")
 
 inbed_df = stage_df[stage_df["type"] == "In Bed"]
 stage_df = stage_df[stage_df["type"] != "In Bed"]
@@ -127,7 +143,9 @@ point = (
     .mark_point(color="#ddccbb", filled=True, opacity=1.0, size=50)
     .encode(
         x="endDate:T",
-        y=alt.Y("value:Q", scale=alt.Scale(domainMin=y_min, domainMax=y_max)).title("Heart Rate (BPM)"),
+        y=alt.Y("value:Q", scale=alt.Scale(domainMin=y_min, domainMax=y_max)).title(
+            "Heart Rate (BPM)"
+        ),
     )
 )
 
@@ -160,4 +178,3 @@ st.altair_chart(
 )
 
 st.caption("Heart rate is also recorded by your Apple Watch :watch:.")
-

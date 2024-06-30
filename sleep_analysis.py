@@ -3,14 +3,48 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import altair as alt
+import os
 
 
 @st.cache_data
 def get_df():
-    return pd.read_feather(st.session_state.data_path).drop_duplicates()
+    path = st.session_state.data_path
+    filename, file_extension = os.path.splitext(path)
+    if file_extension == ".feather":
+        df = pd.read_feather(path)
+    elif file_extension == ".csv":
+        df = pd.read_csv(
+            path, parse_dates=["startDate", "endDate"], date_format="%Y-%m-%d %H:%M:%S"
+        )
+    else:
+        raise IOError(
+            "Unsupported file types. Currently supports .csv or .feather file."
+        )
+
+    df.drop_duplicates(inplace=True)
+
+    df = df.loc[df["value"] == "HKCategoryValueSleepAnalysisInBed"]
+    date_col = ["startDate", "endDate"]
+
+    df[date_col] = df[date_col].apply(
+        lambda x: pd.to_datetime(x.dt.strftime(date_format='%Y-%m-%d %H:%M:%S'), 
+        format='%Y-%m-%d %H:%M:%S'),
+        axis=1,
+    )
+
+    df["duration"] = df["endDate"] - df["startDate"]
+    df = df.loc[df["duration"] >= timedelta(minutes=5)]  # remove durations <= 5 minutes
+    # D0 sleep: D0 18:00 - D1 18:00
+    df["idx"] = df["startDate"].apply(
+        lambda x: x.date() if x.hour >= 18 else x.date() - timedelta(days=1)
+    )
+
+    return df
+
 
 def timedelta_to_hourminute(dt):
     return f"{dt // 3600:.0f}h {(dt//60) % 60:.0f}m"
+
 
 st.set_page_config(
     page_title="Overall Sleep",
@@ -22,19 +56,7 @@ st.write("""Choose start date and end date to analyze your daily sleep time.""")
 
 # get data and limited its range
 df = get_df()
-df = df.loc[df["value"] == "HKCategoryValueSleepAnalysisInBed"]
-date_col = ["startDate", "endDate"]
-df[date_col] = (
-    df[date_col]
-    .apply(lambda x: x.dt.strftime("%Y-%m-%d %H:%M:%S"))
-    .apply(pd.to_datetime)
-)
-df["duration"] = df["endDate"] - df["startDate"]
-df = df.loc[df["duration"] >= timedelta(minutes=5)]  # remove durations <= 5 minutes
-# D0 sleep: D0 18:00 - D1 18:00
-df["idx"] = df["startDate"].apply(
-    lambda x: x.date() if x.hour >= 18 else x.date() - timedelta(days=1)
-)
+
 start_date = st.date_input(
     "Start date",
     value=df["idx"].min(),
@@ -58,9 +80,9 @@ area_line = (
     area_base.mark_area()
     .encode(
         x=alt.X("idx").title("Date"),
-        y=alt.Y("duration").axis(
-            labelExpr='floor(datum.value/3600)+"h "+floor((datum.value%3600)/60)+"m"'
-        ).title("Duration"),
+        y=alt.Y("duration")
+        .axis(labelExpr='floor(datum.value/3600)+"h "+floor((datum.value%3600)/60)+"m"')
+        .title("Duration"),
     )
     .interactive()
 )

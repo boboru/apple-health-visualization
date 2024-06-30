@@ -9,7 +9,7 @@ parser = argparse.ArgumentParser(description="Visualizes your Apple Health data"
 parser.add_argument(
     "-f",
     "--file",
-    default="export.feather",
+    default="data/test.feather",
     type=str,
     help="path of exported feather file",
 )
@@ -22,11 +22,11 @@ except SystemExit as e:
     # so we have to do a hard exit.
     os._exit(e.code)
 
-xml_path = Path(args.file)
-if not xml_path.exists():
-    raise FileNotFoundError("XML file not found")
+path = Path(args.file)
+if not path.exists():
+    raise FileNotFoundError("File not found")
 else:  # save to session
-    st.session_state.data_path = xml_path
+    st.session_state.data_path = path
 
 st.set_page_config(
     page_title="Apple Health Visualization",
