@@ -67,7 +67,7 @@ if "using_fake" not in st.session_state:
     st.session_state.using_fake = False
 
 if "df" not in st.session_state:
-    st.session_state.df = False
+    st.session_state.df = None
 
 st.set_page_config(
     page_title="Apple Health Visualization",

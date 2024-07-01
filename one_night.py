@@ -55,6 +55,13 @@ st.set_page_config(
 st.markdown("# One Night Sleep")
 st.write("""Choose one date to investigate your sleep.""")
 
+if "data_path" not in st.session_state:
+    st.session_state.data_path = None
+if "df" not in st.session_state:
+    st.session_state.df = None
+if "using_fake" not in st.session_state:
+    st.session_state.using_fake = False
+
 if st.session_state.data_path is None and st.session_state.df is None:
     st.warning("Please import data on Home page first.", icon="⚠️")
     if st.button("Home", type="primary"):
