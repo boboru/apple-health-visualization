@@ -3,7 +3,7 @@ This application visualizes your Apple Health data with ease. Unlike the built-i
 
 To protect your privacy, your Apple Health data is utilized locally. Otherwise, we perform simulated data generation. (ignore step 2.)
 
-Start using demo:
+Start using demo: [Streamlit Cloud](https://boboru-apple-health.streamlit.app/)
 
 ![img](image/img1.png)
 
