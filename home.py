@@ -32,7 +32,6 @@ def st_file_selector(st_placeholder, path='.', label='Select a file/folder', key
                                         key=key, 
                                         on_change = lambda: update_dir(key))
     selected_path = os.path.normpath(os.path.join(base_path, selected_file))
-    #st_placeholder.write(os.path.abspath(selected_path))
 
     return selected_path
 
@@ -63,8 +62,12 @@ if args.file:
 else:
     st.session_state.data_path = None
 
-st.session_state.using_fake = False
-st.session_state.df = None
+# initialization of session_state
+if "using_fake" not in st.session_state:
+    st.session_state.using_fake = False
+
+if "df" not in st.session_state:
+    st.session_state.df = False
 
 st.set_page_config(
     page_title="Apple Health Visualization",
@@ -125,7 +128,6 @@ st.divider()
 st.markdown(
     """
     ### Contact
-    - email: boru0713@gmail.com
     - [GitHub](https://github.com/boboru/apple-health-visualization)
     - [Blog](https://boboru.net/) 
     """
