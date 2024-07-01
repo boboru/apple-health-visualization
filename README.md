@@ -32,6 +32,10 @@ Start using demo:
 Import data or use fake data and start!
 ![import](image/import.png)
 
+## Known Issues
+1. Data export from Apple Health has a bug under iOS in [16, 16.2). This bug has been fixed by Apple after iOS 16.2, so update your iOS first.
+2. Apple doesn't handle time zone and daylight savings well. Therefore, if your sleeps cross different regions, the records may be incorrect.
+
 
 ## Contact
 - [GitHub](https://github.com/boboru/apple-health-visualization)
