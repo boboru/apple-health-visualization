@@ -4,21 +4,23 @@ import streamlit as st
 from datetime import timedelta
 import os
 
-
 @st.cache_data
 def get_df():
-    path = st.session_state.data_path
-    filename, file_extension = os.path.splitext(path)
-    if file_extension == ".feather":
-        df = pd.read_feather(path)
-    elif file_extension == ".csv":
-        df = pd.read_csv(
-            path, parse_dates=["startDate", "endDate"]
-        )
+    if st.session_state.using_fake:
+        df = st.session_state.df
     else:
-        raise IOError(
-            "Unsupported file types. Currently supports .csv or .feather file."
-        )
+        path = st.session_state.data_path
+        filename, file_extension = os.path.splitext(path)
+        if file_extension == ".feather":
+            df = pd.read_feather(path)
+        elif file_extension == ".csv":
+            df = pd.read_csv(
+                path, parse_dates=["startDate", "endDate"], date_format="%Y-%m-%d %H:%M:%S"
+            )
+        else:
+            raise IOError(
+                "Unsupported file types. Currently supports .csv or .feather file."
+            )
 
     df.drop_duplicates(inplace=True)
 
@@ -28,7 +30,6 @@ def get_df():
     ]
 
     date_col = ["startDate", "endDate"]
-    st.write(df["startDate"].iloc[0])
     # apple health export useless time timezone offset (+/- hours:minutes) in export.xml
     df[date_col] = df[date_col].apply(
         lambda x: pd.to_datetime(
@@ -36,7 +37,6 @@ def get_df():
         ),
         axis=1,
     )
-    st.write(df["startDate"].iloc[0])
 
     # add time index
     # D0 sleep: D0 18:00 - D1 18:00
@@ -54,6 +54,11 @@ st.set_page_config(
 
 st.markdown("# One Night Sleep")
 st.write("""Choose one date to investigate your sleep.""")
+
+if st.session_state.data_path is None and st.session_state.df is None:
+    st.warning("Please import data on Home page first.", icon="⚠️")
+    if st.button("Home", type="primary"):
+        st.switch_page("home.py")
 
 df = get_df()
 date_ = st.date_input(

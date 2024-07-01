@@ -5,21 +5,23 @@ import streamlit as st
 import altair as alt
 import os
 
-
 @st.cache_data
 def get_df():
-    path = st.session_state.data_path
-    filename, file_extension = os.path.splitext(path)
-    if file_extension == ".feather":
-        df = pd.read_feather(path)
-    elif file_extension == ".csv":
-        df = pd.read_csv(
-            path, parse_dates=["startDate", "endDate"], date_format="%Y-%m-%d %H:%M:%S"
-        )
+    if st.session_state.using_fake:
+        df = st.session_state.df
     else:
-        raise IOError(
-            "Unsupported file types. Currently supports .csv or .feather file."
-        )
+        path = st.session_state.data_path
+        filename, file_extension = os.path.splitext(path)
+        if file_extension == ".feather":
+            df = pd.read_feather(path)
+        elif file_extension == ".csv":
+            df = pd.read_csv(
+                path, parse_dates=["startDate", "endDate"], date_format="%Y-%m-%d %H:%M:%S"
+            )
+        else:
+            raise IOError(
+                "Unsupported file types. Currently supports .csv or .feather file."
+            )
 
     df.drop_duplicates(inplace=True)
 
@@ -53,6 +55,11 @@ st.set_page_config(
 
 st.markdown("# Overall Sleep")
 st.write("""Choose start date and end date to analyze your daily sleep time.""")
+
+if st.session_state.data_path is None and st.session_state.df is None:
+    st.warning("Please import data on Home page first.", icon="⚠️")
+    if st.button("Home", type="primary"):
+        st.switch_page("home.py")
 
 # get data and limited its range
 df = get_df()

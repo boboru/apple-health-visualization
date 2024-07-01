@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from faker import Faker
 
-
 def simulate(start_date=datetime(2024, 1, 1), end_date=datetime.now()):
     fake = Faker()
     rng = np.random.default_rng()
